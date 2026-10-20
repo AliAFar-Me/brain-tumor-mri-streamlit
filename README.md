@@ -6,7 +6,7 @@ Interactive Streamlit web application for 4-class Brain Tumor MRI classification
 An interactive clinical decision-support demonstration built with **Streamlit**, **PyTorch**, and **Hugging Face Transformers**. This application hosts the best-performing Vision Transformer from the **AIxMed 2026 Bootcamp (Project 2)** to classify human brain MRI scans into four diagnostic categories: **Glioma**, **Meningioma**, **Pituitary Tumor**, and **No Tumor**.
 
 ## 🚀 Live Demo & Model Weights
-* **Live Streamlit Web App:** [Insert your `.streamlit.app` URL here]
+* **Live Streamlit Web App:** [[Insert your `.streamlit.app` URL here]](https://brain-tumor-mri-app-wnxsj73nbqgprvktsgtkgn.streamlit.app/)
 * **Hugging Face Model Hub:** [AliAFar/brain-tumor-vit-best](https://huggingface.co/AliAFar/brain-tumor-vit-best)
 * **Dataset:** [Hemg/Brain-Tumor-MRI-Dataset](https://huggingface.co/datasets/Hemg/Brain-Tumor-MRI-Dataset) (7,023 brain MRI scans across 4 classes)
 

@@ -2,7 +2,7 @@ import streamlit as st
 import torch
 import torch.nn as nn
 import pandas as pd
-from transformers import AutoModel, AutoImageProcessor
+from transformers import ViTImageProcessor, ViTModel
 from huggingface_hub import hf_hub_download
 from PIL import Image
 
@@ -16,43 +16,45 @@ st.set_page_config(
 st.title("🧠 Brain Tumor MRI Classification")
 st.markdown(
     "Upload a brain MRI scan to classify it into **Glioma**, **Meningioma**, **Pituitary**, "
-    "or **No Tumor** using a fine-tuned **RAD-DINO** Vision Transformer."
+    "or **No Tumor** using a fine-tuned **ViT-Base (`google/vit-base-patch16-224`)** Vision Transformer."
 )
 
 REPO_ID = "AliAFar/brain-tumor-vit-best"
+BACKBONE_ID = "google/vit-base-patch16-224"
 CLASSES = ["Glioma", "Meningioma", "No Tumor", "Pituitary"]
 
 # 2. Define the Model Wrapper
 class Classifier(nn.Module):
-    def __init__(self, backbone, num_classes):
+    def __init__(self, backbone, num_classes=4):
         super().__init__()
         self.backbone = backbone
         self.head = nn.Linear(backbone.config.hidden_size, num_classes)
 
     def forward(self, pixel_values):
         outputs = self.backbone(pixel_values=pixel_values)
-        features = (
-            outputs.pooler_output
-            if getattr(outputs, "pooler_output", None) is not None
-            else outputs.last_hidden_state[:, 0]
-        )
-        return self.head(features)
+        # Extract the [CLS] token representation directly from last_hidden_state
+        # (Avoids ViTModel's randomly initialized pooler_output!)
+        cls_features = outputs.last_hidden_state[:, 0]
+        return self.head(cls_features)
 
-# 3. Cached Model Loader (Downloads once on startup)
+# 3. Cached Model Loader
 @st.cache_resource
-def load_model():
-    processor = AutoImageProcessor.from_pretrained(REPO_ID)
-    backbone = AutoModel.from_pretrained(REPO_ID)
-    
+def load_custom_model():
+    # Load processor and pretrained ViT-Base backbone
+    processor = ViTImageProcessor.from_pretrained(BACKBONE_ID)
+    backbone = ViTModel.from_pretrained(BACKBONE_ID)
+
+    # Download the lightweight custom head weights from your HF repo
     weights_path = hf_hub_download(
         repo_id=REPO_ID,
-        filename="custom_classifier_head.pt"
+        filename="custom_classifier_head.pt",
+        force_download=True  # Ensures Streamlit fetches your latest uploaded .pt file
     )
-    
+
     model = Classifier(backbone, num_classes=len(CLASSES))
     raw_state = torch.load(weights_path, map_location=torch.device("cpu"))
-    
-    # Automatically match the linear weight [4, 768] and bias [4] regardless of key name
+
+    # Automatically map the linear weight [4, 768] and bias [4] regardless of layer attribute name in Colab
     head_weight = next(
         v for v in raw_state.values() if v.ndim == 2 and v.shape[0] == len(CLASSES)
     )
@@ -61,12 +63,12 @@ def load_model():
     )
     model.head.weight.data.copy_(head_weight)
     model.head.bias.data.copy_(head_bias)
-    
+
     model.eval()
     return processor, model
 
-with st.spinner("Loading RAD-DINO Vision Transformer from Hugging Face..."):
-    processor, model = load_model()
+with st.spinner("Loading ViT-Base (`google/vit-base-patch16-224`) and custom head..."):
+    processor, model = load_custom_model()
 
 # 4. File Uploader & Inference UI
 uploaded_file = st.file_uploader("Upload an MRI Scan (JPG/PNG)", type=["jpg", "jpeg", "png"])

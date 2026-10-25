@@ -8,14 +8,6 @@ An end-to-end medical imaging pipeline and interactive **Streamlit** web applica
 * **📂 Dataset:** [Hemg/Brain-Tumor-MRI-Dataset](https://huggingface.co/datasets/Hemg/Brain-Tumor-MRI-Dataset)
 
 ---
-
-## 🖥️ Live Clinical Web Application
-Users can upload a brain MRI scan (`JPG`/`PNG`) to run real-time diagnostic inference using the fine-tuned `google/vit-base-patch16-224` model and view class-wise confidence distributions:
-
-![Streamlit App Demo](Screenshot%202026-10-25%20164324.png)
-
----
-
 ## 🔬 Architectures Benchmarked (Supervised vs. Self-Supervised)
 Four Hugging Face Vision Transformer backbones were trained and compared across 15 epochs:
 * **Supervised Models:** `google/vit-base-patch16-224` (`Base_ViT`) & `microsoft/swin-tiny-patch4-window7-224` (`Swin_ViT`)
